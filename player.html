@@ -55,17 +55,23 @@ function updatePlayer() {
   const emergencyVideoId = localStorage.getItem('emergencyVideoId');
   isEmergency = localStorage.getItem('isEmergency') === 'true';
 
-  // アクセス時に確認ポップアップを表示
-  const userConfirmed = confirm("再生するには「はい」を押してください");
+  // ポップアップの確認フラグ
+  if (!sessionStorage.getItem('hasConfirmed')) {
+    // アクセス時に確認ポップアップを表示
+    const userConfirmed = confirm("再生するには「はい」を押してください");
 
-  if (!userConfirmed) {
-    // ユーザーが「はい」を押さなかった場合、再生しない
-    alert("再生がキャンセルされました");
-    statusElement.textContent = '再生キャンセル';
-    return;
+    if (!userConfirmed) {
+      // ユーザーが「はい」を押さなかった場合、再生しない
+      alert("再生がキャンセルされました");
+      statusElement.textContent = '再生キャンセル';
+      return;
+    }
+
+    // ユーザーが「はい」を押した場合、フラグを設定してポップアップを出さないようにする
+    sessionStorage.setItem('hasConfirmed', 'true');
   }
 
-  // ユーザーが「はい」を押した場合
+  // ユーザーが確認した場合は再生を開始
   if (broadcastAction === 'stop') {
     // 放送停止中
     videoPlayer.src = '';
@@ -114,8 +120,6 @@ function updatePlayer() {
     }
   }
 }
-
-
     // 動画リストの取得
     function fetchVideoList() {
       const storedVideos = localStorage.getItem('videoList');
