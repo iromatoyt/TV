@@ -7,194 +7,248 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      line-height: 1.6;
+      background-color: #2c3e50;
+      color: #ecf0f1;
       margin: 0;
-      padding: 0;
-      background-color: #f4f4f9;
-    }
-
-    .container {
-      max-width: 800px;
-      margin: 20px auto;
       padding: 20px;
-      background: #fff;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     h1 {
-      font-size: 24px;
-      color: #333;
+      color: #e74c3c;
     }
 
-    .button-group button {
-      margin: 5px;
-      padding: 10px 20px;
-      font-size: 14px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background 0.3s;
+    .container {
+      width: 100%;
+      max-width: 800px;
     }
 
-    .button-group button:hover {
-      background: #ddd;
-    }
-
-    .button-group button:active {
-      background: #ccc;
+    label {
+      font-size: 16px;
+      margin-top: 20px;
+      display: block;
     }
 
     input[type="text"] {
-      padding: 8px;
-      width: calc(100% - 20px);
+      width: 100%;
+      padding: 10px;
       margin: 10px 0;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #bdc3c7;
     }
 
-    .video-preview,
-    .current-video {
-      margin-top: 20px;
-      text-align: center;
+    button {
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background-color: #c0392b;
     }
 
     video {
       width: 100%;
-      max-height: 300px;
-      border-radius: 8px;
-      background: #000;
-    }
-
-    .status-box {
       margin-top: 20px;
-      padding: 15px;
-      border: 1px solid #ccc;
+      border: 2px solid #e74c3c;
       border-radius: 8px;
-      background-color: #f9f9f9;
     }
 
-    .status-box p {
-      margin: 5px 0;
+    .current-video {
+      margin-top: 40px;
+      text-align: center;
+    }
+
+    .current-video h2 {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .actions {
+      margin-top: 20px;
+    }
+
+    .actions button {
+      margin: 5px;
     }
   </style>
 </head>
 <body>
+  <h1>管理ページ</h1>
   <div class="container">
-    <h1>管理ページ</h1>
+    <!-- 動画ID入力 -->
+    <label for="videoId">動画IDを入力してください:</label>
+    <input type="text" id="videoId" placeholder="動画IDを入力">
+    <button id="previewButton">プレビュー</button>
+    <button id="addToListButton">リストに追加</button>
 
-    <div class="button-group">
+    <!-- プレビュー用動画 -->
+    <video id="previewVideo" controls muted>
+      動画のプレビューがここに表示されます。
+    </video>
+
+    <!-- 現在の放送中の動画 -->
+    <div class="current-video">
+      <h2>現在配信中の動画:</h2>
+      <video id="currentVideo" controls muted autoplay>
+        配信中の動画がここに表示されます。
+      </video>
+    </div>
+
+    <!-- 緊急放送 -->
+    <div class="emergency">
+      <label for="emergencyVideoId">緊急放送用動画ID:</label>
+      <input type="text" id="emergencyVideoId" placeholder="緊急放送用の動画IDを入力">
+      <button id="startEmergency">緊急放送開始</button>
+      <button id="stopEmergency">緊急放送停止</button>
+    </div>
+
+    <!-- アクション -->
+    <div class="actions">
       <button id="startBroadcast">放送開始</button>
       <button id="stopBroadcast">放送停止</button>
-      <button id="startEmergency">緊急放送開始</button>
-      <button id="stopEmergency">緊急放送終了</button>
-    </div>
-
-    <label for="videoIdInput">動画IDを入力：</label>
-    <input type="text" id="videoIdInput" placeholder="動画IDを入力">
-    <button id="previewVideo">プレビュー</button>
-    <button id="changeVideo">動画切り替え</button>
-
-    <div class="video-preview">
-      <h3>動画プレビュー</h3>
-      <video id="previewPlayer" controls>
-        <source src="" type="video/mp4">
-        プレビュー用動画が表示されます
-      </video>
-    </div>
-
-    <div class="current-video">
-      <h3>配信中の動画</h3>
-      <video id="currentPlayer" controls autoplay muted>
-        <source src="" type="video/mp4">
-        現在配信中の動画が表示されます
-      </video>
-    </div>
-
-    <div class="status-box">
-      <h3>現在の状態</h3>
-      <p>放送状態: <span id="broadcastState">未設定</span></p>
-      <p>再生中の動画ID: <span id="currentVideo">未設定</span></p>
+      <button id="nextVideo">次の動画</button>
+      <button id="previousVideo">前の動画</button>
     </div>
   </div>
 
   <script>
-    // 動画リストJSON（例: APIデータとしても動作可能）
-    const videos = [
-      { id: "2", title: "動画1", url: "https://laboratory.f5.si/2.mp4" },
-      { id: "3", title: "動画2", url: "https://laboratory.f5.si/3.mp4" },
-    ];
+    const videoIdInput = document.getElementById('videoId');
+    const emergencyVideoIdInput = document.getElementById('emergencyVideoId');
+    const previewVideo = document.getElementById('previewVideo');
+    const currentVideo = document.getElementById('currentVideo');
+    const previewButton = document.getElementById('previewButton');
+    const addToListButton = document.getElementById('addToListButton');
+    const startBroadcastButton = document.getElementById('startBroadcast');
+    const stopBroadcastButton = document.getElementById('stopBroadcast');
+    const nextVideoButton = document.getElementById('nextVideo');
+    const previousVideoButton = document.getElementById('previousVideo');
+    const startEmergencyButton = document.getElementById('startEmergency');
+    const stopEmergencyButton = document.getElementById('stopEmergency');
 
-    const emergencyVideo = { id: "em", title: "緊急放送", url: "https://laboratory.f5.si/em.mp4" };
+    let videoList = [];
+    let currentVideoIndex = 0;
 
-    // 各エレメント
-    const videoIdInput = document.getElementById('videoIdInput');
-    const previewPlayer = document.getElementById('previewPlayer');
-    const currentPlayer = document.getElementById('currentPlayer');
-    const broadcastStateEl = document.getElementById('broadcastState');
-    const currentVideoEl = document.getElementById('currentVideo');
+    // 動画リストの読み込み
+    function fetchVideoList() {
+      const storedVideos = localStorage.getItem('videoList');
+      videoList = storedVideos ? JSON.parse(storedVideos) : [];
+    }
 
-    // 放送制御
-    document.getElementById('startBroadcast').addEventListener('click', () => {
-      localStorage.setItem('broadcastAction', 'start');
+    // 動画リストの保存
+    function saveVideoList() {
+      localStorage.setItem('videoList', JSON.stringify(videoList));
+    }
+
+    // プレビュー表示
+    previewButton.addEventListener('click', () => {
+      const videoId = videoIdInput.value.trim();
+      if (videoId) {
+        previewVideo.src = `https://laboratory.f5.si/${videoId}.mp4`;
+        previewVideo.load();
+        previewVideo.play();
+      }
     });
 
-    document.getElementById('stopBroadcast').addEventListener('click', () => {
+    // リストに追加
+    addToListButton.addEventListener('click', () => {
+      const videoId = videoIdInput.value.trim();
+      if (videoId) {
+        videoList.push(videoId);
+        saveVideoList();
+        alert('動画をリストに追加しました!');
+        videoIdInput.value = '';
+      }
+    });
+
+    // 放送開始
+    startBroadcastButton.addEventListener('click', () => {
+      localStorage.setItem('broadcastAction', 'start');
+      alert('放送を開始しました!');
+    });
+
+    // 放送停止
+    stopBroadcastButton.addEventListener('click', () => {
       localStorage.setItem('broadcastAction', 'stop');
+      alert('放送を停止しました!');
     });
 
-    document.getElementById('startEmergency').addEventListener('click', () => {
-      localStorage.setItem('broadcastAction', 'emergency');
-      localStorage.setItem('currentVideoId', 'emergency');
+    // 次の動画
+    nextVideoButton.addEventListener('click', () => {
+      currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
+      localStorage.setItem('currentVideoIndex', currentVideoIndex);
+      alert('次の動画に切り替えました!');
     });
 
-    document.getElementById('stopEmergency').addEventListener('click', () => {
-      localStorage.setItem('broadcastAction', 'start');
+    // 前の動画
+    previousVideoButton.addEventListener('click', () => {
+      currentVideoIndex =
+        (currentVideoIndex - 1 + videoList.length) % videoList.length;
+      localStorage.setItem('currentVideoIndex', currentVideoIndex);
+      alert('前の動画に切り替えました!');
     });
 
-    document.getElementById('changeVideo').addEventListener('click', () => {
-      const videoId = videoIdInput.value.trim();
-      const video = videos.find(v => v.id === videoId);
-      if (video) {
-        localStorage.setItem('currentVideoId', videoId);
-        alert(`動画ID ${videoId} に切り替えました`);
-      } else {
-        alert('無効な動画IDです');
+    // 緊急放送開始
+    startEmergencyButton.addEventListener('click', () => {
+      const emergencyVideoId = emergencyVideoIdInput.value.trim();
+      if (emergencyVideoId) {
+        localStorage.setItem('emergencyVideoId', emergencyVideoId);
+        localStorage.setItem('isEmergency', 'true');
+        alert('緊急放送を開始しました!');
       }
     });
 
-    // プレビュー機能
-    document.getElementById('previewVideo').addEventListener('click', () => {
-      const videoId = videoIdInput.value.trim();
-      const video = videos.find(v => v.id === videoId);
-      if (video) {
-        previewPlayer.src = video.url;
-        previewPlayer.play();
-      } else {
-        alert('プレビューできません。無効な動画IDです');
-      }
+    // 緊急放送停止
+    stopEmergencyButton.addEventListener('click', () => {
+      localStorage.removeItem('emergencyVideoId');
+      localStorage.setItem('isEmergency', 'false');
+      alert('緊急放送を停止しました!');
     });
 
-    // 状態更新
-    function updateStatus() {
-      const broadcastAction = localStorage.getItem('broadcastAction') || '未設定';
-      const currentVideoId = localStorage.getItem('currentVideoId') || '未設定';
+    // 現在の配信中動画を表示
+    function updateCurrentVideo() {
+      const isEmergency = localStorage.getItem('isEmergency') === 'true';
+      const broadcastAction = localStorage.getItem('broadcastAction') || 'stop';
 
-      const currentVideo = videos.find(v => v.id === currentVideoId) || 
-                           (currentVideoId === 'emergency' ? emergencyVideo : null);
-
-      broadcastStateEl.textContent = 
-        broadcastAction === 'emergency' ? '緊急放送中' : 
-        broadcastAction === 'start' ? '通常放送中' : '停止中';
-
-      currentVideoEl.textContent = currentVideo ? `${currentVideo.title} (${currentVideo.id})` : '未設定';
-
-      if (currentVideo) {
-        currentPlayer.src = currentVideo.url;
+      if (broadcastAction === 'stop') {
+        currentVideo.src = '';
+        currentVideo.poster = 'https://via.placeholder.com/800x450?text=放送停止中';
+        currentVideo.pause();
+      } else if (isEmergency) {
+        const emergencyVideoId = localStorage.getItem('emergencyVideoId');
+        currentVideo.src = `https://laboratory.f5.si/${emergencyVideoId}.mp4`;
+        currentVideo.loop = true;
+        currentVideo.load();
+        currentVideo.play();
+      } else {
+        fetchVideoList();
+        const videoId =
+          videoList[currentVideoIndex] || 'https://via.placeholder.com/';
+        currentVideo.src = `https://laboratory.f5.si/${videoId}.mp4`;
+        currentVideo.loop = false;
+        currentVideo.load();
+        currentVideo.play();
       }
     }
 
-    setInterval(updateStatus, 1000);
+    // 初期化
+    function initialize() {
+      fetchVideoList();
+      currentVideoIndex = parseInt(localStorage.getItem('currentVideoIndex'), 10) || 0;
+      updateCurrentVideo();
+
+      setInterval(updateCurrentVideo, 1000); // 定期更新
+    }
+
+    window.addEventListener('DOMContentLoaded', initialize);
   </script>
 </body>
 </html>
