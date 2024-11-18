@@ -50,36 +50,33 @@
     let videoList = [];
     let isEmergency = false;
 
-// 配信の状態を更新する関数
 function updatePlayer() {
   const broadcastAction = localStorage.getItem('broadcastAction') || 'stop';
   const emergencyVideoId = localStorage.getItem('emergencyVideoId');
   isEmergency = localStorage.getItem('isEmergency') === 'true';
 
   if (broadcastAction === 'stop') {
-    // 放送停止時
+    // 放送停止中
     videoPlayer.src = '';
     videoPlayer.poster = 'https://via.placeholder.com/800x450?text=%E6%94%BE%E9%80%81%E5%81%9C%E6%AD%A2%E4%B8%AD';
     videoPlayer.pause();
     statusElement.textContent = '放送停止中';
   } else if (isEmergency && emergencyVideoId) {
     // 緊急放送中
-    videoPlayer.poster = ''; // ポスターをクリア
     videoPlayer.src = `https://laboratory.f5.si/${emergencyVideoId}.mp4`;
-    videoPlayer.loop = true;
-    videoPlayer.load();
-    videoPlayer.play();
+    videoPlayer.poster = ''; // ポスターを削除
+    videoPlayer.load(); // 動画をロード
+    videoPlayer.play().catch((err) => console.error('再生エラー:', err));
     statusElement.textContent = '緊急放送中';
   } else {
     // 通常放送中
     fetchVideoList();
     const videoId = videoList[currentVideoIndex];
     if (videoId) {
-      videoPlayer.poster = ''; // ポスターをクリア
       videoPlayer.src = `https://laboratory.f5.si/${videoId}.mp4`;
-      videoPlayer.loop = false;
-      videoPlayer.load();
-      videoPlayer.play();
+      videoPlayer.poster = ''; // ポスターを削除
+      videoPlayer.load(); // 動画をロード
+      videoPlayer.play().catch((err) => console.error('再生エラー:', err));
       statusElement.textContent = '配信中';
     } else {
       // 動画リストが空の場合
@@ -90,6 +87,7 @@ function updatePlayer() {
     }
   }
 }
+
 
     // 動画リストの取得
     function fetchVideoList() {
