@@ -77,12 +77,15 @@ function updatePlayer() {
     videoPlayer.muted = true;  // 音声をミュート
     videoPlayer.load(); // 動画をロード
 
-    console.log("緊急放送再生開始");
-    videoPlayer.play().catch((err) => {
-      alert(`再生エラー: ${err.message}`);
-      console.error('再生エラー:', err);
-    });
+    // 動画がロードされた後に再生
+    videoPlayer.oncanplaythrough = () => {
+      videoPlayer.play().catch((err) => {
+        alert(`再生エラー: ${err.message}`);
+        console.error('再生エラー:', err);
+      });
+    };
 
+    console.log("緊急放送再生開始");
     statusElement.textContent = '緊急放送中';
   } else {
     // 通常放送中
@@ -93,12 +96,15 @@ function updatePlayer() {
       videoPlayer.muted = true;  // 音声をミュート
       videoPlayer.load(); // 動画をロード
 
-      console.log("通常放送再生開始");
-      videoPlayer.play().catch((err) => {
-        alert(`再生エラー: ${err.message}`);
-        console.error('再生エラー:', err);
-      });
+      // 動画がロードされた後に再生
+      videoPlayer.oncanplaythrough = () => {
+        videoPlayer.play().catch((err) => {
+          alert(`再生エラー: ${err.message}`);
+          console.error('再生エラー:', err);
+        });
+      };
 
+      console.log("通常放送再生開始");
       statusElement.textContent = '配信中';
     } else {
       // 動画リストが空の場合
@@ -108,6 +114,7 @@ function updatePlayer() {
     }
   }
 }
+
 
     // 動画リストの取得
     function fetchVideoList() {
