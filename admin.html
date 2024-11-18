@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理ページ</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f9;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #fff;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+
+    h1 {
+      font-size: 24px;
+      color: #333;
+    }
+
+    .button-group button {
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 14px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .button-group button:hover {
+      background: #ddd;
+    }
+
+    .button-group button:active {
+      background: #ccc;
+    }
+
+    input[type="text"] {
+      padding: 8px;
+      width: calc(100% - 20px);
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .video-preview,
+    .current-video {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    video {
+      width: 100%;
+      max-height: 300px;
+      border-radius: 8px;
+      background: #000;
+    }
+
+    .status-box {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+    }
+
+    .status-box p {
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>管理ページ</h1>
+
+    <div class="button-group">
+      <button id="startBroadcast">放送開始</button>
+      <button id="stopBroadcast">放送停止</button>
+      <button id="startEmergency">緊急放送開始</button>
+      <button id="stopEmergency">緊急放送終了</button>
+    </div>
+
+    <label for="videoIdInput">動画IDを入力：</label>
+    <input type="text" id="videoIdInput" placeholder="動画IDを入力">
+    <button id="previewVideo">プレビュー</button>
+    <button id="changeVideo">動画切り替え</button>
+
+    <div class="video-preview">
+      <h3>動画プレビュー</h3>
+      <video id="previewPlayer" controls>
+        <source src="" type="video/mp4">
+        プレビュー用動画が表示されます
+      </video>
+    </div>
+
+    <div class="current-video">
+      <h3>配信中の動画</h3>
+      <video id="currentPlayer" controls autoplay muted>
+        <source src="" type="video/mp4">
+        現在配信中の動画が表示されます
+      </video>
+    </div>
+
+    <div class="status-box">
+      <h3>現在の状態</h3>
+      <p>放送状態: <span id="broadcastState">未設定</span></p>
+      <p>再生中の動画ID: <span id="currentVideo">未設定</span></p>
+    </div>
+  </div>
+
+  <script>
+    // 動画リストJSON（例: APIデータとしても動作可能）
+    const videos = [
+      { id: "1", title: "動画1", url: "https://example.com/video1.mp4" },
+      { id: "2", title: "動画2", url: "https://example.com/video2.mp4" },
+      { id: "3", title: "動画3", url: "https://example.com/video3.mp4" },
+    ];
+
+    const emergencyVideo = { id: "emergency", title: "緊急放送", url: "https://example.com/emergency.mp4" };
+
+    // 各エレメント
+    const videoIdInput = document.getElementById('videoIdInput');
+    const previewPlayer = document.getElementById('previewPlayer');
+    const currentPlayer = document.getElementById('currentPlayer');
+    const broadcastStateEl = document.getElementById('broadcastState');
+    const currentVideoEl = document.getElementById('currentVideo');
+
+    // 放送制御
+    document.getElementById('startBroadcast').addEventListener('click', () => {
+      localStorage.setItem('broadcastAction', 'start');
+    });
+
+    document.getElementById('stopBroadcast').addEventListener('click', () => {
+      localStorage.setItem('broadcastAction', 'stop');
+    });
+
+    document.getElementById('startEmergency').addEventListener('click', () => {
+      localStorage.setItem('broadcastAction', 'emergency');
+      localStorage.setItem('currentVideoId', 'emergency');
+    });
+
+    document.getElementById('stopEmergency').addEventListener('click', () => {
+      localStorage.setItem('broadcastAction', 'start');
+    });
+
+    document.getElementById('changeVideo').addEventListener('click', () => {
+      const videoId = videoIdInput.value.trim();
+      const video = videos.find(v => v.id === videoId);
+      if (video) {
+        localStorage.setItem('currentVideoId', videoId);
+        alert(`動画ID ${videoId} に切り替えました`);
+      } else {
+        alert('無効な動画IDです');
+      }
+    });
+
+    // プレビュー機能
+    document.getElementById('previewVideo').addEventListener('click', () => {
+      const videoId = videoIdInput.value.trim();
+      const video = videos.find(v => v.id === videoId);
+      if (video) {
+        previewPlayer.src = video.url;
+        previewPlayer.play();
+      } else {
+        alert('プレビューできません。無効な動画IDです');
+      }
+    });
+
+    // 状態更新
+    function updateStatus() {
+      const broadcastAction = localStorage.getItem('broadcastAction') || '未設定';
+      const currentVideoId = localStorage.getItem('currentVideoId') || '未設定';
+
+      const currentVideo = videos.find(v => v.id === currentVideoId) || 
+                           (currentVideoId === 'emergency' ? emergencyVideo : null);
+
+      broadcastStateEl.textContent = 
+        broadcastAction === 'emergency' ? '緊急放送中' : 
+        broadcastAction === 'start' ? '通常放送中' : '停止中';
+
+      currentVideoEl.textContent = currentVideo ? `${currentVideo.title} (${currentVideo.id})` : '未設定';
+
+      if (currentVideo) {
+        currentPlayer.src = currentVideo.url;
+      }
+    }
+
+    setInterval(updateStatus, 1000);
+  </script>
+</body>
+</html>
