@@ -10,6 +10,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      flex-direction: column; /* 縦方向に並べる */
       height: 100vh;
       background-color: #2c3e50;
       color: #ecf0f1;
@@ -24,6 +25,7 @@
       border-radius: 8px;
       background-color: black;
       pointer-events: none; /* ユーザーが操作できないように */
+      margin-top: 20px; /* 下部にプレイヤーを表示 */
     }
 
     .status {
@@ -36,11 +38,21 @@
       font-size: 14px;
       border-radius: 5px;
     }
+
+    .player-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
   </style>
 </head>
 <body>
-  <div class="status" id="status">配信中...</div>
-  <video id="videoPlayer" autoplay muted loop></video>
+  <div class="player-container">
+    <div class="status" id="status">配信中...</div>
+    <video id="videoPlayer" autoplay muted loop></video>
+  </div>
 
   <script>
     const videoPlayer = document.getElementById('videoPlayer');
@@ -49,76 +61,77 @@
     let currentVideoIndex = 0;
     let videoList = [];
     let isEmergency = false;
-function updatePlayer() {
-  const broadcastAction = localStorage.getItem('broadcastAction') || 'stop';
-  const emergencyVideoId = localStorage.getItem('emergencyVideoId');
-  isEmergency = localStorage.getItem('isEmergency') === 'true';
 
-  // ポップアップの確認フラグ
-  if (!sessionStorage.getItem('hasConfirmed')) {
-    // アクセス時に確認ポップアップを表示
-    const userConfirmed = confirm("再生するには「はい」を押してください");
+    function updatePlayer() {
+      const broadcastAction = localStorage.getItem('broadcastAction') || 'stop';
+      const emergencyVideoId = localStorage.getItem('emergencyVideoId');
+      isEmergency = localStorage.getItem('isEmergency') === 'true';
 
-    if (!userConfirmed) {
-      // ユーザーが「はい」を押さなかった場合、再生しない
-      alert("再生がキャンセルされました");
-      statusElement.textContent = '再生キャンセル';
-      return;
+      // ポップアップの確認フラグ
+      if (!sessionStorage.getItem('hasConfirmed')) {
+        // アクセス時に確認ポップアップを表示
+        const userConfirmed = confirm("再生するには「はい」を押してください");
+
+        if (!userConfirmed) {
+          // ユーザーが「はい」を押さなかった場合、再生しない
+          alert("再生がキャンセルされました");
+          statusElement.textContent = '再生キャンセル';
+          return;
+        }
+
+        // ユーザーが「はい」を押した場合、フラグを設定してポップアップを出さないようにする
+        sessionStorage.setItem('hasConfirmed', 'true');
+      }
+
+      // 動画プレイヤーの準備
+      if (broadcastAction === 'stop') {
+        // 放送停止中
+        videoPlayer.src = '';
+        videoPlayer.pause();
+        statusElement.textContent = '放送停止中';
+      } else if (isEmergency && emergencyVideoId) {
+        // 緊急放送中
+        videoPlayer.src = `https://laboratory.f5.si/${emergencyVideoId}.mp4`;
+        videoPlayer.muted = true;  // 音声をミュート
+        videoPlayer.load(); // 動画をロード
+
+        // 動画がロードされた後に再生
+        videoPlayer.oncanplaythrough = () => {
+          videoPlayer.play().catch((err) => {
+            alert(`再生エラー: ${err.message}`);
+            console.error('再生エラー:', err);
+          });
+        };
+
+        console.log("緊急放送再生開始");
+        statusElement.textContent = '緊急放送中';
+      } else {
+        // 通常放送中
+        fetchVideoList();
+        const videoId = videoList[currentVideoIndex];
+        if (videoId) {
+          videoPlayer.src = `https://laboratory.f5.si/${videoId}.mp4`;
+          videoPlayer.muted = true;  // 音声をミュート
+          videoPlayer.load(); // 動画をロード
+
+          // 動画がロードされた後に再生
+          videoPlayer.oncanplaythrough = () => {
+            videoPlayer.play().catch((err) => {
+              alert(`再生エラー: ${err.message}`);
+              console.error('再生エラー:', err);
+            });
+          };
+
+          console.log("通常放送再生開始");
+          statusElement.textContent = '配信中';
+        } else {
+          // 動画リストが空の場合
+          videoPlayer.src = '';
+          videoPlayer.pause();
+          statusElement.textContent = '動画リストが空です';
+        }
+      }
     }
-
-    // ユーザーが「はい」を押した場合、フラグを設定してポップアップを出さないようにする
-    sessionStorage.setItem('hasConfirmed', 'true');
-  }
-
-  // 動画プレイヤーの準備
-  if (broadcastAction === 'stop') {
-    // 放送停止中
-    videoPlayer.src = '';
-    videoPlayer.pause();
-    statusElement.textContent = '放送停止中';
-  } else if (isEmergency && emergencyVideoId) {
-    // 緊急放送中
-    videoPlayer.src = `https://laboratory.f5.si/${emergencyVideoId}.mp4`;
-    videoPlayer.muted = true;  // 音声をミュート
-    videoPlayer.load(); // 動画をロード
-
-    // 動画がロードされた後に再生
-    videoPlayer.oncanplaythrough = () => {
-      videoPlayer.play().catch((err) => {
-        alert(`再生エラー: ${err.message}`);
-        console.error('再生エラー:', err);
-      });
-    };
-
-    console.log("緊急放送再生開始");
-    statusElement.textContent = '緊急放送中';
-  } else {
-    // 通常放送中
-    fetchVideoList();
-    const videoId = videoList[currentVideoIndex];
-    if (videoId) {
-      videoPlayer.src = `https://laboratory.f5.si/${videoId}.mp4`;
-      videoPlayer.muted = true;  // 音声をミュート
-      videoPlayer.load(); // 動画をロード
-
-      // 動画がロードされた後に再生
-      videoPlayer.oncanplaythrough = () => {
-        videoPlayer.play().catch((err) => {
-          alert(`再生エラー: ${err.message}`);
-          console.error('再生エラー:', err);
-        });
-      };
-
-      console.log("通常放送再生開始");
-      statusElement.textContent = '配信中';
-    } else {
-      // 動画リストが空の場合
-      videoPlayer.src = '';
-      videoPlayer.pause();
-      statusElement.textContent = '動画リストが空です';
-    }
-  }
-}
 
     // 動画リストの取得
     function fetchVideoList() {
